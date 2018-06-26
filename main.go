@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"os"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/flw-cn/go-fortune"
 	"github.com/flw-cn/go-slackbot"
 	"github.com/flw-cn/go-smartConfig"
+	"github.com/flw-cn/playground/docker"
 	"github.com/flw-cn/slack"
 	"github.com/pityonline/china-unix-slack-bot/service"
 	log "github.com/sirupsen/logrus"
@@ -55,6 +57,9 @@ func main() {
 	toMe.Hear("(?i)(ping).*").MessageHandler(Ping)
 	toMe.Hear("(?i)(ip) .*").MessageHandler(QueryIP)
 	toMe.MessageHandler(Fortune)
+
+	code := bot.Messages(slackbot.Message).Subrouter()
+	code.Hear("(?s)```\\s*?(?P<lang>\\S*)\\n\\s*(?P<code>.+)\\s*```").MessageHandler(PlayGo)
 
 	bot.Run(true, nil)
 }
@@ -119,5 +124,23 @@ func Fortune(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
 		m = m + "\n" + o
 	}
 
+	bot.Reply(evt, m, slackbot.WithTyping)
+}
+
+func PlayGo(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
+	codeInfo := slackbot.NamedCapturesFromContext(ctx)
+
+	lang := codeInfo.Get("lang")
+	code := codeInfo.Get("code")
+
+	output, err := docker.PlayCode(lang, code)
+	if err != nil {
+		log.Printf("Error: %s\n%s", err, output)
+		return
+	}
+
+	sep := "-------------------"
+
+	m := fmt.Sprintf("output:\n%s\n%s\n%s", sep, output, sep)
 	bot.Reply(evt, m, slackbot.WithTyping)
 }
