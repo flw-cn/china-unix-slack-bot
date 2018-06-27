@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"os"
 	"strings"
 
@@ -35,8 +37,9 @@ var Dumper = spew.ConfigState{
 	SortKeys:                true,
 }
 
+var config Config
+
 func main() {
-	var config Config
 
 	smartConfig.LoadConfig("Slack Bot", "v0.2.0", &config)
 
@@ -60,6 +63,9 @@ func main() {
 
 	code := bot.Messages(slackbot.Message).Subrouter()
 	code.Hear("(?s)```\\s*?(?P<lang>\\S*)\\n\\s*(?P<code>.+)\\s*```").MessageHandler(PlayGo)
+
+	codeFile := bot.Messages(slackbot.FileShared).Subrouter()
+	codeFile.MessageHandler(PlayGoFile)
 
 	bot.Run(true, nil)
 }
@@ -142,5 +148,59 @@ func PlayGo(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
 	sep := "-------------------"
 
 	m := fmt.Sprintf("output:\n%s\n%s\n%s", sep, output, sep)
-	bot.Reply(evt, m, slackbot.WithTyping)
+	bot.ReplyInThread(evt, m, slackbot.WithTyping)
+}
+
+func PlayGoFile(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
+	lang := evt.File.Filetype
+	file, err := slackDownloadFile(bot.Client, evt.File.ID)
+	if err != nil {
+		log.Printf("Error: %s\n", err)
+		return
+	}
+
+	output, err := docker.PlayFile(lang, file)
+	if err != nil {
+		log.Printf("Error: %s\n%s", err, output)
+		return
+	}
+
+	sep := "-------------------"
+
+	m := fmt.Sprintf("output:\n%s\n%s\n%s", sep, output, sep)
+	bot.ReplyInThread(evt, m, slackbot.WithTyping)
+}
+
+func slackDownloadFile(api *slack.Client, fileID string) (string, error) {
+	file, _, _, err := api.GetFileInfo(fileID, 0, 0)
+	if err != nil {
+		return "", err
+	}
+
+	url := file.URLPrivateDownload
+
+	req, err := http.NewRequest("GET", url, nil)
+	req.Header.Add("Authorization", "Bearer "+config.Token)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	content, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	tmpdir, err := ioutil.TempDir("", "slack-bot-downloaded-files-")
+	if err != nil {
+		return "", err
+	}
+
+	tmpFile := tmpdir + "/file"
+	err = ioutil.WriteFile(tmpFile, content, 0666)
+	if err != nil {
+		return "", err
+	}
+
+	return tmpFile, nil
 }
