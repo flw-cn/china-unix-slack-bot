@@ -52,7 +52,7 @@ func main() {
 	toMe.Hear("(?i)(hi|hello).*").MessageHandler(Hello)
 	toMe.Hear("(?i)(ping).*").MessageHandler(Ping)
 	toMe.Hear("(?i)(ip) .*").MessageHandler(QueryIP)
-	toMe.MessageHandler(Fortune)
+	toMe.MessageHandler(Whatever)
 
 	code := bot.Messages(slackbot.Message).Subrouter()
 	code.Hear("(?s)```\\s*?(?P<lang>\\S*)\\n\\s*(?P<code>.+)\\s*```").MessageHandler(PlayGo)
