@@ -145,10 +145,10 @@ func PlayGo(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
 		return
 	}
 
-	sep := "-------------------"
-
-	m := fmt.Sprintf("output:\n%s\n%s\n%s", sep, output, sep)
-	bot.ReplyInThread(evt, m, slackbot.WithTyping)
+	if output != "" {
+		m := fmt.Sprintf("咦？有人发代码，让我试着运行一下！\n%s", output)
+		bot.Reply(evt, m, slackbot.WithTyping)
+	}
 }
 
 func PlayGoFile(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
@@ -165,10 +165,10 @@ func PlayGoFile(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent)
 		return
 	}
 
-	sep := "-------------------"
-
-	m := fmt.Sprintf("output:\n%s\n%s\n%s", sep, output, sep)
-	bot.ReplyInThread(evt, m, slackbot.WithTyping)
+	if output != "" {
+		m := fmt.Sprintf("你这段代码能运行吗？让我试着运行一下！\n%s", output)
+		bot.ReplyInThread(evt, m, slackbot.WithTyping)
+	}
 }
 
 func slackDownloadFile(api *slack.Client, fileID string) (string, error) {
