@@ -8,7 +8,7 @@ import (
 	"github.com/flw-cn/slack"
 )
 
-func slackDownloadFile(api *slack.Client, fileID string) (string, func(), error) {
+func slackDownloadFile(tmpdir string, api *slack.Client, fileID string) (string, func(), error) {
 	file, _, _, err := api.GetFileInfo(fileID, 0, 0)
 	if err != nil {
 		return "", nil, err
@@ -32,7 +32,7 @@ func slackDownloadFile(api *slack.Client, fileID string) (string, func(), error)
 		return "", nil, err
 	}
 
-	tmpdir, err := ioutil.TempDir("", "slack-bot-downloaded-files-")
+	tmpdir, err = ioutil.TempDir(tmpdir, "slack-bot-downloaded-files-")
 	if err != nil {
 		return "", nil, err
 	}

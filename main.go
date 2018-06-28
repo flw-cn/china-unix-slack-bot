@@ -14,6 +14,7 @@ import (
 type Config struct {
 	Debug bool   `flag:"d|false|debug mode, default to 'false'"`
 	Token string `flag:"t||must provide your {SLACK_TOKEN} here"`
+	Play  PlaygroundConfig
 }
 
 var config Config
@@ -25,7 +26,6 @@ func init() {
 }
 
 func main() {
-
 	smartConfig.LoadConfig("Slack Bot", "v0.2.0", &config)
 
 	bot, _ := slackbot.NewBot(config.Token)
@@ -38,6 +38,12 @@ func main() {
 		logger.Debug("Running in debug mode...")
 		bot.SetLogger(logger)
 		bot.Client.SetDebug(true)
+	}
+
+	err := Init(config.Play)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+		return
 	}
 
 	toMe := bot.Messages(slackbot.DirectMessage, slackbot.Mention).Subrouter()
