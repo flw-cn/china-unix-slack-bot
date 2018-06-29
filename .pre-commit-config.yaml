@@ -1,0 +1,17 @@
+# vim:set et sw=2 ts=2:
+
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v1.3.0
+  hooks:
+    - id: trailing-whitespace
+    - id: end-of-file-fixer
+    - id: mixed-line-ending
+- repo: https://github.com/flw-cn/pre-commit-golang
+  rev: v0.4.0
+  hooks:
+    - id: go-fmt
+    - id: go-vet
+    - id: validate-toml
+    - id: no-go-testing
+    - id: golangci-lint
