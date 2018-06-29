@@ -17,6 +17,10 @@ func slackDownloadFile(api *slack.Client, fileID string) (string, func(), error)
 	url := file.URLPrivateDownload
 
 	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", nil, err
+	}
+
 	req.Header.Add("Authorization", "Bearer "+config.Token)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/flw-cn/go-slackbot"
 	"github.com/flw-cn/go-smartConfig"
 	"github.com/flw-cn/slack"
@@ -17,20 +16,13 @@ type Config struct {
 	Token string `flag:"t||must provide your {SLACK_TOKEN} here"`
 }
 
+var config Config
+
 func init() {
 	log.SetFormatter(&log.TextFormatter{})
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.InfoLevel)
 }
-
-var Dumper = spew.ConfigState{
-	Indent:                  " ",
-	DisablePointerAddresses: true,
-	DisableCapacities:       true,
-	SortKeys:                true,
-}
-
-var config Config
 
 func main() {
 
