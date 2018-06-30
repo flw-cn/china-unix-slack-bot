@@ -13,7 +13,7 @@ func QueryIP(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
 	id := bot.BotUserID()
 	id = "<@" + id + ">"
 	text := strings.Replace(evt.Text, id, "", -1)
-	strings.Trim(text, " ")
+	text = strings.Trim(text, " ")
 	parts := strings.Fields(text)
 
 	api := "http://freeapi.ipip.net/"
