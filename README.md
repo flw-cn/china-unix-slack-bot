@@ -1,7 +1,7 @@
 # Slack Bot
 
-[![Build Status](https://travis-ci.com/pityonline/china-unix-slack-bot.svg?branch=master)](https://travis-ci.com/pityonline/china-unix-slack-bot)
-[![Go Report Card](https://goreportcard.com/badge/github.com/pityonline/china-unix-slack-bot)](https://goreportcard.com/report/github.com/pityonline/china-unix-slack-bot)
+[![Build Status](https://travis-ci.com/flw-cn/slack-bot.svg?branch=master)](https://travis-ci.com/flw-cn/slack-bot)
+[![Go Report Card](https://goreportcard.com/badge/github.com/flw-cn/slack-bot)](https://goreportcard.com/report/github.com/flw-cn/slack-bot)
 
 This is just a slack bot.
 
