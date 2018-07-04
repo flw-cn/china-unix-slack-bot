@@ -1,72 +1,110 @@
 package main
 
 import (
-	"context"
+	"log"
 	"os"
 
-	"github.com/flw-cn/go-slackbot"
 	"github.com/flw-cn/go-smartConfig"
-	"github.com/flw-cn/slack"
-	"github.com/pityonline/china-unix-slack-bot/service"
-	log "github.com/sirupsen/logrus"
+	"github.com/flw-cn/slack-bot/bot"
+	"github.com/flw-cn/slack-bot/event"
+	"github.com/flw-cn/slack-bot/plugin/backend/fortune"
+	"github.com/flw-cn/slack-bot/plugin/backend/greeter"
+	"github.com/flw-cn/slack-bot/plugin/backend/ipQuerier"
+	"github.com/flw-cn/slack-bot/plugin/backend/ping"
+	"github.com/flw-cn/slack-bot/plugin/backend/playground"
+	"github.com/flw-cn/slack-bot/plugin/backend/tuling"
+	"github.com/flw-cn/slack-bot/plugin/frontend/slack"
 )
 
 type Config struct {
-	Debug bool   `flag:"d|false|debug mode, default to 'false'"`
-	Token string `flag:"t||must provide your {SLACK_TOKEN} here"`
-	Play  PlaygroundConfig
-}
-
-var config Config
-
-func init() {
-	log.SetFormatter(&log.TextFormatter{})
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.InfoLevel)
+	Debug    bool `flag:"d|false|debug mode, default to 'false'"`
+	Bot      bot.Config
+	Frontend struct {
+		Slack slack.Config
+	}
+	Backend struct {
+		Greeter   greeter.Config
+		IPQuerier ipQuerier.Config
+		Play      playground.Config
+		Fortune   fortune.Config
+		Tuling    tuling.Config
+		Ping      ping.Config
+	}
 }
 
 func main() {
-	smartConfig.LoadConfig("Slack Bot", "v0.2.0", &config)
+	var config Config
+	smartConfig.LoadConfig("Bot", "v0.3.0", &config)
 
-	bot, _ := slackbot.NewBot(config.Token)
+	logger := log.New(os.Stderr, "BOT ", log.LstdFlags)
 
 	if config.Debug {
-		logger := log.New()
-		logger.Formatter = &log.TextFormatter{}
-		logger.Out = os.Stderr
-		logger.SetLevel(log.DebugLevel)
-		logger.Debug("Running in debug mode...")
-		bot.SetLogger(logger)
-		bot.Client.SetDebug(true)
+		logger.Printf("Running in debug mode...")
 	}
 
-	err := Init(config.Play)
+	err := startBot(logger, config)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		logger.Printf("Error: %v", err)
 		return
 	}
 
-	toMe := bot.Messages(slackbot.DirectMessage, slackbot.Mention).Subrouter()
-	toMe.Hear("(?i)(hi|hello).*").MessageHandler(Hello)
-	toMe.Hear("(?i)(ping).*").MessageHandler(Ping)
-	toMe.Hear("(?i)(ip) .*").MessageHandler(QueryIP)
-	toMe.MessageHandler(Whatever)
-
-	code := bot.Messages(slackbot.Message).Subrouter()
-	code.Hear("(?s)```\\s*?(?P<lang>\\S*)\\n\\s*(?P<code>.+)\\s*```").MessageHandler(PlayGo)
-
-	codeFile := bot.Messages(slackbot.FileShared).Subrouter()
-	codeFile.MessageHandler(PlayGoFile)
-
-	bot.Run(true, nil)
+	select {}
 }
 
-func Hello(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
-	m := service.Greet()
-	bot.Reply(evt, m, slackbot.WithTyping)
-}
+func startBot(logger *log.Logger, config Config) error {
+	bot := bot.New(config.Bot)
+	if config.Debug {
+		bot.SetDebug(true)
+	}
 
-func Ping(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
-	m := service.Ping()
-	bot.Reply(evt, m, slackbot.WithTyping)
+	slack := slack.New(config.Frontend.Slack)
+	err := bot.LoadFrontend(slack)
+	if err != nil {
+		return err
+	}
+
+	greeter := greeter.New(config.Backend.Greeter)
+	ipQuerier := ipQuerier.New(config.Backend.IPQuerier)
+	play := playground.New(config.Backend.Play)
+	fortune := fortune.New(config.Backend.Fortune)
+	tuling := tuling.New(config.Backend.Tuling)
+	ping := ping.New(config.Backend.Ping)
+	err = bot.LoadBackend(greeter, ipQuerier, play, fortune, tuling, ping)
+	if err != nil {
+		return err
+	}
+
+	bot.SetLogger(logger)
+
+	err = bot.Init()
+	if err != nil {
+		return err
+	}
+
+	err = bot.Start()
+	if err != nil {
+		return err
+	}
+
+	toMe := bot.On(event.EvDirectMention, event.EvMentionedMe, event.EvDirectMessage).Subrouter()
+	hook := toMe.Hear(`(?i)^(hi|hello)$`).Hook()
+	bot.Mount(hook, greeter)
+
+	hook = toMe.Hear(`(?i)^\s*ping\s*$`).Hook()
+	bot.Mount(hook, ping)
+
+	hook = toMe.Hear(`(?i)^ip\s+(?P<IP>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$`).Hook()
+	bot.Mount(hook, ipQuerier)
+
+	code := bot.On(event.EvMessage).Subrouter()
+	hook = code.Hear("(?s)```\\s*?\\n?(?P<lang>\\w*)\\n\\s*(?P<code>.+)\\s*```").Hook()
+	bot.Mount(hook, play)
+
+	hook = toMe.Hear(`(?P<words>(唐?诗)|(宋?词))`).Hook()
+	bot.Mount(hook, fortune)
+
+	hook = toMe.Hear("").Hook()
+	bot.Mount(hook, tuling)
+
+	return nil
 }

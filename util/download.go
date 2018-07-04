@@ -1,27 +1,18 @@
-package main
+package util
 
 import (
 	"io/ioutil"
 	"net/http"
 	"os"
-
-	"github.com/flw-cn/slack"
 )
 
-func slackDownloadFile(tmpdir string, api *slack.Client, fileID string) (string, func(), error) {
-	file, _, _, err := api.GetFileInfo(fileID, 0, 0)
-	if err != nil {
-		return "", nil, err
-	}
-
-	url := file.URLPrivateDownload
-
+func DownloadFile(url string, auth string) (string, func(), error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", nil, err
 	}
 
-	req.Header.Add("Authorization", "Bearer "+config.Token)
+	req.Header.Add("Authorization", auth)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", nil, err
@@ -32,7 +23,7 @@ func slackDownloadFile(tmpdir string, api *slack.Client, fileID string) (string,
 		return "", nil, err
 	}
 
-	tmpdir, err = ioutil.TempDir(tmpdir, "slack-bot-downloaded-files-")
+	tmpdir, err := ioutil.TempDir("", "downloaded-files-")
 	if err != nil {
 		return "", nil, err
 	}
