@@ -36,6 +36,18 @@ func New(config Config) *Bot {
 	return b
 }
 
+func (b *Bot) SetDebug(debug bool) {
+	b.Base.SetDebug(debug)
+
+	for _, be := range b.backends {
+		be.SetDebug(debug)
+	}
+
+	for _, fe := range b.frontends {
+		fe.SetDebug(debug)
+	}
+}
+
 func (b *Bot) LoadBackend(be ...plugin.Backend) error {
 	if b.initialized {
 		return errors.New("OOPS! bot already initialized. Please read the document.")
@@ -55,8 +67,10 @@ func (b *Bot) LoadFrontend(fe ...plugin.Frontend) error {
 }
 
 func (b *Bot) Init() error {
+	debug := b.GetDebug()
 	for _, be := range b.backends {
 		be.SetLogger(b.Logger)
+		be.SetDebug(debug)
 		err := be.Init()
 		if err != nil {
 			return fmt.Errorf("Can't initialize backend %s: %v", be.ID(), err)
@@ -65,6 +79,7 @@ func (b *Bot) Init() error {
 
 	for _, fe := range b.frontends {
 		fe.SetLogger(b.Logger)
+		fe.SetDebug(debug)
 		err := fe.Init()
 		if err != nil {
 			return fmt.Errorf("Can't initialize frontend %s: %v", fe.ID(), err)

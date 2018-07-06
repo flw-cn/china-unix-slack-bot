@@ -45,6 +45,10 @@ func (b *Base) SetDebug(debug bool) {
 	b.debug = debug
 }
 
+func (b *Base) GetDebug() bool {
+	return b.debug
+}
+
 func (b *Base) Debug(args ...interface{}) {
 	if !b.debug {
 		return
