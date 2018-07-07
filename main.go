@@ -12,6 +12,7 @@ import (
 	"github.com/flw-cn/slack-bot/plugin/backend/ipQuerier"
 	"github.com/flw-cn/slack-bot/plugin/backend/ping"
 	"github.com/flw-cn/slack-bot/plugin/backend/playground"
+	"github.com/flw-cn/slack-bot/plugin/backend/ruyi"
 	"github.com/flw-cn/slack-bot/plugin/backend/tuling"
 	"github.com/flw-cn/slack-bot/plugin/frontend/slack"
 )
@@ -29,6 +30,7 @@ type Config struct {
 		Fortune   fortune.Config
 		Tuling    tuling.Config
 		Ping      ping.Config
+		Ruyi      ruyi.Config
 	}
 }
 
@@ -69,7 +71,8 @@ func startBot(logger *log.Logger, config Config) error {
 	fortune := fortune.New(config.Backend.Fortune)
 	tuling := tuling.New(config.Backend.Tuling)
 	ping := ping.New(config.Backend.Ping)
-	err = bot.LoadBackend(greeter, ipQuerier, play, fortune, tuling, ping)
+	ruyi := ruyi.New(config.Backend.Ruyi)
+	err = bot.LoadBackend(greeter, ipQuerier, play, fortune, tuling, ping, ruyi)
 	if err != nil {
 		return err
 	}
@@ -104,7 +107,7 @@ func startBot(logger *log.Logger, config Config) error {
 	bot.Mount(hook, fortune)
 
 	hook = toMe.Hear("").Hook()
-	bot.Mount(hook, tuling)
+	bot.Mount(hook, ruyi)
 
 	return nil
 }
