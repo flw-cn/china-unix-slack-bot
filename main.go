@@ -109,5 +109,9 @@ func startBot(logger *log.Logger, config Config) error {
 	hook = toMe.Hear("").Hook()
 	bot.Mount(hook, ruyi)
 
+	file := bot.On(event.EvFileMessage).Subrouter()
+	hook = file.OnFileTypes("go").Hook()
+	bot.Mount(hook, play)
+
 	return nil
 }

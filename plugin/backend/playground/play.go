@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"strings"
 	"syscall"
 
 	"github.com/flw-cn/playground/docker"
@@ -48,7 +49,16 @@ func (p *Playground) Init() error {
 
 func (p *Playground) Handle(ctx context.Context, data interface{}) {
 	fe := ctx.Value(plugin.CtxKeyFrontend).(plugin.Frontend)
-	msg := data.(*event.Message)
+
+	switch msg := data.(type) {
+	case *event.Message:
+		p.PlayGoCode(ctx, fe, msg)
+	case event.File:
+		p.PlayGoFile(ctx, fe, msg)
+	}
+}
+
+func (p *Playground) PlayGoCode(ctx context.Context, fe plugin.Frontend, msg *event.Message) {
 	dict := ctx.Value(plugin.CtxKeyMatchedNames).(map[string]string)
 
 	lang := dict["lang"]
@@ -76,29 +86,35 @@ func (p *Playground) Handle(ctx context.Context, data interface{}) {
 	}
 }
 
-/*
-func PlayGoFile(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
-	lang := evt.File.Filetype
-	file, cleaner, err := slackDownloadFile(config.Play.Docker, bot.Client, evt.File.ID)
+func (p *Playground) PlayGoFile(ctx context.Context, fe plugin.Frontend, file event.File) {
+	fileInfo := file.Info()
+	codeFile, cleaner, err := file.Download()
 	if err != nil {
-		log.Printf("Error: %s\n", err)
+		p.Debugf("ERROR: %v", err)
 		return
 	}
 
 	defer cleaner()
 
 	m := fmt.Sprintf("你这段代码能运行吗？让我试着运行一下！")
-	bot.ReplyInThread(evt, m, slackbot.WithTyping)
+	fe.SendTextMessage(fileInfo.Channel, m)
 
-	output, err := docker.PlayFile(lang, file)
+	output, err := docker.PlayFile(fileInfo.Type, codeFile)
 	if err != nil {
-		log.Printf("Error: %s\n%s", err, output)
+		m = fmt.Sprintf("运行结果出错啦。\nError: %s\n%s", err, output)
+		if e, ok := err.(*exec.ExitError); ok {
+			status := e.ProcessState.Sys().(syscall.WaitStatus)
+			if status.Signaled() && status.Signal() == syscall.SIGKILL {
+				m = m + "\n看起来像是运行时间太长超时了，要不你再检查一下？"
+			}
+		}
+		fe.SendTextMessage(fileInfo.Channel, m)
 		return
 	}
 
+	output = strings.TrimSpace(output)
 	if output != "" {
-		m = fmt.Sprintf("运行结果出来了！\n%s", output)
-		bot.ReplyInThread(evt, m, slackbot.WithTyping)
+		m = fmt.Sprintf("运行结果出来了！\n```\n%s\n```", output)
+		fe.SendTextMessage(fileInfo.Channel, m)
 	}
 }
-*/
