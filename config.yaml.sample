@@ -1,0 +1,16 @@
+# vim: set ft=yaml:
+Debug: off
+Frontend:
+    Slack:
+        Token: "<YOUR SLACK TOKEN HERE>"
+        UseRTMStart: true
+Backend:
+    Play:
+        Docker: /slack-bot/playground
+        Host: /tmp/playground
+    Tuling:
+        URL: "http://www.tuling123.com/openapi/api"
+        Token: "<YOUR TULING API TOKEN HERE>"
+    Ruyi:
+        URL: "http://api.ruyi.ai/v1/message"
+        AppKey: "<YOUR RUYI APP KEY HERE>"
