@@ -64,6 +64,11 @@ func (p *Playground) PlayGoCode(ctx context.Context, fe plugin.Frontend, msg *ev
 	lang := dict["lang"]
 	code := dict["code"]
 
+	lang = strings.ToLower(lang)
+	if lang != "go" && lang != "golang" {
+		return
+	}
+
 	m := fmt.Sprintf("咦？有人发代码，让我试着运行一下！")
 	fe.SendTextMessage(msg.Channel, m)
 
