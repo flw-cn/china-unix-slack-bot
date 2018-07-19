@@ -30,7 +30,7 @@ docker run --name slack-bot $DOCKER_ARGS    \
     -v $PLAYGROUND:/slack-bot/playground    \
     -v $DOCKER_SOCK:$DOCKER_SOCK            \
     --env TULING_API_KEY=$TULING_API_KEY    \
-    flwos/slack-bot $BOT_ARGS               \
+    flwcn/slack-bot $BOT_ARGS               \
     --frontend.slack.token $SLACK_TOKEN     \
     --backend.tuling.token $TULING_API_KEY  \
     --backend.ruyi.appkey $RUYI_APP_KEY
