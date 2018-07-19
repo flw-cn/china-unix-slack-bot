@@ -25,6 +25,8 @@ RUN go get -v github.com/flw-cn/go-slackbot
 RUN go get -v github.com/flw-cn/slack-bot
 
 WORKDIR /slack-bot
+ADD config.yaml.default /slack-bot/config.yaml
+
 VOLUME ["/slack-bot/playground/"]
 
-ENTRYPOINT ["slack-bot", "--play.docker", "/slack-bot/playground"]
+ENTRYPOINT ["slack-bot"]
