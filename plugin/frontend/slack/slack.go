@@ -85,10 +85,9 @@ func (s *Slack) Start() error {
 	return nil
 }
 
-func (s *Slack) Stop() error {
+func (s *Slack) Stop() {
 	// TODO: shutdown slack API
 	close(s.done)
-	return nil
 }
 
 func (s *Slack) IncomingEvents() <-chan *event.Event {

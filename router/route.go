@@ -38,8 +38,8 @@ func (r *Route) OnFileTypes(types ...string) *Route {
 }
 
 // Call sets a handler for the route
-func (r *Route) Call(handler EventHandler) *Route {
-	r.handler = Handler(handler)
+func (r *Route) Call(handler func(ctx context.Context, data interface{})) *Route {
+	r.handler = EventHandler(handler)
 	return r
 }
 

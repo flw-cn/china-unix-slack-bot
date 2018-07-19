@@ -50,7 +50,7 @@ func (b *Bot) SetDebug(debug bool) {
 
 func (b *Bot) LoadBackend(be ...plugin.Backend) error {
 	if b.initialized {
-		return errors.New("OOPS! bot already initialized. Please read the document.")
+		return errors.New("bot already initialized")
 	}
 
 	b.backends = append(b.backends, be...)
@@ -59,7 +59,7 @@ func (b *Bot) LoadBackend(be ...plugin.Backend) error {
 
 func (b *Bot) LoadFrontend(fe ...plugin.Frontend) error {
 	if b.initialized {
-		return errors.New("OOPS! bot already initialized. Please read the document.")
+		return errors.New("bot already initialized")
 	}
 
 	b.frontends = append(b.frontends, fe...)
@@ -93,7 +93,7 @@ func (b *Bot) Init() error {
 
 func (b *Bot) Start() error {
 	if !b.initialized {
-		return errors.New("The bot is not initialized yet. please call bot.Init() first.")
+		return errors.New("bot is not initialized yet")
 	}
 
 	for _, fe := range b.frontends {
@@ -127,15 +127,13 @@ func (b *Bot) dispatch() {
 	}
 }
 
-func (b *Bot) Stop() error {
+func (b *Bot) Stop() {
 	for _, be := range b.backends {
 		be.Stop()
 	}
 	for _, fe := range b.frontends {
 		fe.Stop()
 	}
-
-	return nil
 }
 
 func (b *Bot) Mount(r *router.Route, be plugin.Backend) {

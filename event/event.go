@@ -51,11 +51,15 @@ type Message struct {
 }
 
 func (m Message) String() string {
+	var str string
+
 	if len(m.Mentioned) > 0 {
-		return fmt.Sprintf("[%s] %s %s said to %s: %s", m.Type, m.Channel, m.User, m.Mentioned, m.Text)
+		str = fmt.Sprintf("[%s] %s %s said to %s: %s", m.Type, m.Channel, m.User, m.Mentioned, m.Text)
 	} else {
-		return fmt.Sprintf("[%s] %s %s said: %s", m.Type, m.Channel, m.User, m.Text)
+		str = fmt.Sprintf("[%s] %s %s said: %s", m.Type, m.Channel, m.User, m.Text)
 	}
+
+	return str
 }
 
 type FileInfo struct {

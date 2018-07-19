@@ -6,11 +6,15 @@ type Channel struct {
 }
 
 func (c Channel) String() string {
+	var str string
+
 	if c.Name != "" {
-		return "#" + c.Name
+		str = "#" + c.Name
 	} else {
-		return "#<" + c.ID + ">"
+		str = "#<" + c.ID + ">"
 	}
+
+	return str
 }
 
 type User struct {
@@ -19,9 +23,13 @@ type User struct {
 }
 
 func (u User) String() string {
+	var str string
+
 	if u.Name != "" {
-		return u.Name
+		str = u.Name
 	} else {
-		return "<" + u.ID + ">"
+		str = "<" + u.ID + ">"
 	}
+
+	return str
 }

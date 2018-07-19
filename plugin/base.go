@@ -86,12 +86,11 @@ func (b *Base) Init() error {
 
 func (b *Base) Start() error {
 	if !b.initialized {
-		return errors.New("Not initialized yet, can't startup.")
+		return errors.New("not initialized yet")
 	}
 
 	return nil
 }
 
-func (b *Base) Stop() error {
-	return nil
+func (b *Base) Stop() {
 }

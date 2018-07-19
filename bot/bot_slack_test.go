@@ -16,15 +16,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var slackToken string = "<YOU SLACK TOKEN>"
+var slackToken = "<YOU SLACK TOKEN>"
 
 func init() {
 	slackToken = os.Getenv("SLACK_TOKEN")
 }
 
-func setupTestEnv() (*slacktest.Server, *Bot) {
+func setupTestEnv(t *testing.T) (*slacktest.Server, *Bot) {
 	s := setupTestServer()
-	bot := setupBot()
+	bot := setupBot(t)
 	return s, bot
 }
 
@@ -37,7 +37,7 @@ func setupTestServer() *slacktest.Server {
 	return s
 }
 
-func setupBot() *Bot {
+func setupBot(t *testing.T) *Bot {
 	botConfig := Config{}
 	bot := New(botConfig)
 
@@ -49,11 +49,14 @@ func setupBot() *Bot {
 	greeterConfig := greeter.Config{}
 	greeter := greeter.New(greeterConfig)
 
-	bot.LoadFrontend(slack)
-	bot.LoadBackend(greeter)
-
-	bot.Init()
-	bot.Start()
+	err := bot.LoadFrontend(slack)
+	assert.NoError(t, err, "must no error")
+	err = bot.LoadBackend(greeter)
+	assert.NoError(t, err, "must no error")
+	err = bot.Init()
+	assert.NoError(t, err, "must no error")
+	err = bot.Start()
+	assert.NoError(t, err, "must no error")
 
 	return bot
 }
@@ -70,7 +73,7 @@ const (
 )
 
 func TestChannelMessage(t *testing.T) {
-	s, bot := setupTestEnv()
+	s, bot := setupTestEnv(t)
 	defer s.Stop()
 	defer bot.Stop()
 
@@ -93,7 +96,7 @@ func TestChannelMessage(t *testing.T) {
 }
 
 func TestDirectMessage(t *testing.T) {
-	s, bot := setupTestEnv()
+	s, bot := setupTestEnv(t)
 	defer s.Stop()
 	defer bot.Stop()
 
@@ -116,7 +119,7 @@ func TestDirectMessage(t *testing.T) {
 }
 
 func TestRegexpMatcher(t *testing.T) {
-	s, bot := setupTestEnv()
+	s, bot := setupTestEnv(t)
 	defer s.Stop()
 	defer bot.Stop()
 

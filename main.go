@@ -7,9 +7,10 @@ import (
 	"github.com/flw-cn/go-smartConfig"
 	"github.com/flw-cn/slack-bot/bot"
 	"github.com/flw-cn/slack-bot/event"
+	"github.com/flw-cn/slack-bot/plugin"
 	"github.com/flw-cn/slack-bot/plugin/backend/fortune"
 	"github.com/flw-cn/slack-bot/plugin/backend/greeter"
-	"github.com/flw-cn/slack-bot/plugin/backend/ipQuerier"
+	"github.com/flw-cn/slack-bot/plugin/backend/ipquerier"
 	"github.com/flw-cn/slack-bot/plugin/backend/ping"
 	"github.com/flw-cn/slack-bot/plugin/backend/playground"
 	"github.com/flw-cn/slack-bot/plugin/backend/ruyi"
@@ -25,7 +26,7 @@ type Config struct {
 	}
 	Backend struct {
 		Greeter   greeter.Config
-		IPQuerier ipQuerier.Config
+		IPQuerier ipquerier.Config
 		Play      playground.Config
 		Fortune   fortune.Config
 		Tuling    tuling.Config
@@ -53,7 +54,7 @@ func main() {
 	select {}
 }
 
-func startBot(logger *log.Logger, config Config) error {
+func startBot(logger plugin.Logger, config Config) error {
 	bot := bot.New(config.Bot)
 	if config.Debug {
 		bot.SetDebug(true)
@@ -66,7 +67,7 @@ func startBot(logger *log.Logger, config Config) error {
 	}
 
 	greeter := greeter.New(config.Backend.Greeter)
-	ipQuerier := ipQuerier.New(config.Backend.IPQuerier)
+	ipQuerier := ipquerier.New(config.Backend.IPQuerier)
 	play := playground.New(config.Backend.Play)
 	fortune := fortune.New(config.Backend.Fortune)
 	tuling := tuling.New(config.Backend.Tuling)

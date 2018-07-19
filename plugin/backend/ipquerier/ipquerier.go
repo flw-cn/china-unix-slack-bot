@@ -1,4 +1,4 @@
-package ipQuerier
+package ipquerier
 
 import (
 	"context"

@@ -28,7 +28,7 @@ type Runable interface {
 	ID() string
 	Init() error
 	Start() error
-	Stop() error
+	Stop()
 }
 
 type Debugable interface {
