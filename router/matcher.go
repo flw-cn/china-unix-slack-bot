@@ -11,7 +11,7 @@ import (
 
 // Matcher type for matching message routes
 type Matcher interface {
-	Match(context.Context, interface{}) (bool, context.Context)
+	Match(context.Context, *event.Event) (bool, context.Context)
 }
 
 // RegexpMatcher is a regexp matcher
@@ -28,8 +28,8 @@ func NewRegexpMatcher(regex string) *RegexpMatcher {
 }
 
 // Match matches an event
-func (rm *RegexpMatcher) Match(ctx context.Context, data interface{}) (bool, context.Context) {
-	msg, ok := data.(*event.Message)
+func (rm *RegexpMatcher) Match(ctx context.Context, ev *event.Event) (bool, context.Context) {
+	msg, ok := ev.Data.(*event.Message)
 	if !ok {
 		return false, ctx
 	}
@@ -58,28 +58,7 @@ func NewTypesMatcher(types []event.Type) *TypesMatcher {
 }
 
 // Match matches an event
-func (tm *TypesMatcher) Match(ctx context.Context, data interface{}) (bool, context.Context) {
-	switch msg := data.(type) {
-	case *event.Message:
-		switch msg.Type {
-		case "DirectMessage":
-			if _, ok := tm.types[event.EvDirectMessage]; ok {
-				return true, ctx
-			}
-		case "DirectMention":
-			if _, ok := tm.types[event.EvDirectMention]; ok {
-				return true, ctx
-			}
-		case "MentionedMe":
-			if _, ok := tm.types[event.EvMentionedMe]; ok {
-				return true, ctx
-			}
-		case "ChannelMessage":
-			if _, ok := tm.types[event.EvMessage]; ok {
-				return true, ctx
-			}
-		}
-	}
-
-	return false, ctx
+func (tm *TypesMatcher) Match(ctx context.Context, ev *event.Event) (bool, context.Context) {
+	_, ok := tm.types[ev.Type]
+	return ok, ctx
 }

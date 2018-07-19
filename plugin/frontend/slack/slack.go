@@ -124,7 +124,7 @@ LOOP:
 				s.Logger.Print("Invalid credentials")
 				return
 			default:
-				s.Debugf("Event: %#v", evt)
+				s.Debugf("Event(%s): %#v", evt.Type, evt.Data)
 				// s.eventChan <- NewUnhandledEvent(ctx, &evt)
 			}
 		}
@@ -161,7 +161,7 @@ func (s *Slack) NewTextMessageEvent(ctx context.Context, ev *api.MessageEvent) *
 		}
 	}
 
-	msg := event.Message{
+	msg := &event.Message{
 		Channel: types.Channel{
 			ID:   ev.Channel,
 			Name: s.resolveChannelName(ev.Channel),
@@ -174,17 +174,22 @@ func (s *Slack) NewTextMessageEvent(ctx context.Context, ev *api.MessageEvent) *
 		Text:      stripedText,
 	}
 
+	var evType event.Type
 	if isDirectMessage(ev.Channel) {
+		evType = event.EvDirectMessage
 		msg.Type = event.DirectMessage
 	} else if isDirectMention(originText, s.me.ID) {
+		evType = event.EvDirectMention
 		msg.Type = event.DirectMention
 	} else if isMentioned(originText, s.me.ID) {
+		evType = event.EvMentionedMe
 		msg.Type = event.MentionedMe
 	} else {
+		evType = event.EvMessage
 		msg.Type = event.ChannelMessage
 	}
 
-	return event.NewEvent(ctx, &msg)
+	return event.NewEvent(ctx, evType, msg)
 }
 
 func (s *Slack) resolveChannelName(id string) string {

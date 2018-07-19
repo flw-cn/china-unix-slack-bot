@@ -50,8 +50,8 @@ func (r *Route) Subrouter() *Router {
 }
 
 // Match matches
-func (r *Route) Match(ctx context.Context, data interface{}) (Handler, context.Context) {
-	matched, newCtx := r.matcher.Match(ctx, data)
+func (r *Route) Match(ctx context.Context, ev *event.Event) (Handler, context.Context) {
+	matched, newCtx := r.matcher.Match(ctx, ev)
 	if !matched {
 		return nil, ctx
 	}
@@ -61,7 +61,7 @@ func (r *Route) Match(ctx context.Context, data interface{}) (Handler, context.C
 	}
 
 	if r.subrouter != nil {
-		return r.subrouter.Match(newCtx, data)
+		return r.subrouter.Match(newCtx, ev)
 	}
 
 	return nil, ctx

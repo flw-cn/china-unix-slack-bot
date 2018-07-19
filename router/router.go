@@ -17,9 +17,9 @@ func NewRouter() *Router {
 	return &Router{}
 }
 
-func (r *Router) Match(ctx context.Context, data interface{}) (Handler, context.Context) {
+func (r *Router) Match(ctx context.Context, ev *event.Event) (Handler, context.Context) {
 	for _, route := range r.routes {
-		if handler, ctx := route.Match(ctx, data); handler != nil {
+		if handler, ctx := route.Match(ctx, ev); handler != nil {
 			return handler, ctx
 		}
 	}

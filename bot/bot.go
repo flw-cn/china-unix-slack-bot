@@ -119,8 +119,8 @@ func (b *Bot) Start() error {
 func (b *Bot) dispatch() {
 	for e := range b.eventChan {
 		fe := e.Ctx.Value(plugin.CtxKeyFrontend).(plugin.Frontend)
-		b.Logger.Printf("[%s] %s", fe.ID(), e.Data)
-		handler, ctx := b.Match(e.Ctx, e.Data)
+		b.Logger.Printf("[%s] [%s] %s", fe.ID(), e.Type, e.Data)
+		handler, ctx := b.Match(e.Ctx, e)
 		if handler != nil {
 			handler.Handle(ctx, e.Data)
 		}

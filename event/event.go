@@ -21,12 +21,14 @@ const (
 
 type Event struct {
 	Ctx  context.Context
+	Type Type
 	Data fmt.Stringer
 }
 
-func NewEvent(ctx context.Context, data fmt.Stringer) *Event {
+func NewEvent(ctx context.Context, t Type, data fmt.Stringer) *Event {
 	return &Event{
 		Ctx:  ctx,
+		Type: t,
 		Data: data,
 	}
 }
