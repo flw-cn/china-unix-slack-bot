@@ -2,6 +2,7 @@ package slack
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/flw-cn/slack-bot/event"
 	"github.com/flw-cn/slack-bot/plugin"
 	"github.com/flw-cn/slack-bot/types"
+	"github.com/flw-cn/slack-bot/util"
 )
 
 type Config struct {
@@ -114,6 +116,8 @@ LOOP:
 				s.Logger.Printf("Connect error: %s", ev.Error())
 			case *api.MessageEvent:
 				s.eventChan <- s.NewTextMessageEvent(ctx, ev)
+			case *api.FileSharedEvent:
+				s.eventChan <- s.NewFileEvent(ctx, ev)
 			case *api.ChannelJoinedEvent:
 				// s.eventChan <- NewJoinChannelEvent(ctx, ev)
 			case *api.GroupJoinedEvent:
@@ -190,6 +194,71 @@ func (s *Slack) NewTextMessageEvent(ctx context.Context, ev *api.MessageEvent) *
 	}
 
 	return event.NewEvent(ctx, evType, msg)
+}
+
+func (s *Slack) NewFileEvent(ctx context.Context, ev *api.FileSharedEvent) *event.Event {
+	slackFile, _, _, err := s.Client.GetFileInfo(ev.FileID, 10, 1)
+	if err != nil {
+		return nil
+	}
+
+	name := ""
+	u, err := s.Client.GetUserInfo(ev.File.User)
+	if err == nil {
+		name = u.Name
+	}
+
+	channel := ""
+	if len(slackFile.Channels) > 0 {
+		channel = slackFile.Channels[0]
+	} else if len(slackFile.Groups) > 0 {
+		channel = slackFile.Groups[0]
+	}
+
+	file := &File{
+		fileInfo: event.FileInfo{
+			ID:   slackFile.ID,
+			Type: slackFile.Filetype,
+			Name: slackFile.Name,
+			Channel: types.Channel{
+				ID:   channel,
+				Name: s.resolveChannelName(channel),
+			},
+			User: types.User{
+				ID:   slackFile.User,
+				Name: name,
+			},
+			Comment: slackFile.InitialComment.Comment,
+		},
+		url:   slackFile.URLPrivateDownload,
+		token: s.config.Token,
+	}
+
+	return event.NewEvent(ctx, event.EvFileMessage, file)
+}
+
+type File struct {
+	fileInfo event.FileInfo
+	url      string
+	token    string
+}
+
+func (f *File) String() string {
+	return fmt.Sprintf("%s uploaded a file: <%s|%s> into %s and commented: %s",
+		f.fileInfo.User, f.fileInfo.ID, f.fileInfo.Name, f.fileInfo.Channel, f.fileInfo.Comment)
+}
+
+func (f *File) Info() event.FileInfo {
+	return f.fileInfo
+}
+
+func (f *File) Download() (string, func(), error) {
+	codeFile, cleaner, err := util.DownloadFile(f.url, "Bearer "+f.token)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return codeFile, cleaner, nil
 }
 
 func (s *Slack) resolveChannelName(id string) string {
