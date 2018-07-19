@@ -57,3 +57,19 @@ func (m Message) String() string {
 		return fmt.Sprintf("[%s] %s %s said: %s", m.Type, m.Channel, m.User, m.Text)
 	}
 }
+
+type FileInfo struct {
+	ID        string
+	Type      string
+	Name      string
+	Channel   types.Channel
+	User      types.User
+	Mentioned []types.User
+	Comment   string
+}
+
+type File interface {
+	fmt.Stringer
+	Info() FileInfo
+	Download() (string, func(), error)
+}

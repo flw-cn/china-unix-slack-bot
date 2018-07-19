@@ -3,6 +3,7 @@ package router
 import (
 	"context"
 	"regexp"
+	"strings"
 
 	"github.com/flw-cn/slack-bot/event"
 	"github.com/flw-cn/slack-bot/plugin"
@@ -60,5 +61,36 @@ func NewTypesMatcher(types []event.Type) *TypesMatcher {
 // Match matches an event
 func (tm *TypesMatcher) Match(ctx context.Context, ev *event.Event) (bool, context.Context) {
 	_, ok := tm.types[ev.Type]
+	return ok, ctx
+}
+
+// FileTypesMatcher is a matcher based of event type
+type FileTypesMatcher struct {
+	types map[string]bool
+}
+
+// NewFileTypesMatcher builds a new FileTypesMatcher
+func NewFileTypesMatcher(types []string) *FileTypesMatcher {
+	dict := map[string]bool{}
+	for _, t := range types {
+		t = strings.ToLower(t)
+		dict[t] = true
+	}
+	return &FileTypesMatcher{types: dict}
+}
+
+// Match matches an event
+func (ftm *FileTypesMatcher) Match(ctx context.Context, ev *event.Event) (bool, context.Context) {
+	if ev.Type != event.EvFileMessage {
+		return false, ctx
+	}
+
+	file, ok := ev.Data.(event.File)
+	if !ok {
+		return false, ctx
+	}
+
+	t := strings.ToLower(file.Info().Type)
+	_, ok = ftm.types[t]
 	return ok, ctx
 }

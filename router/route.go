@@ -32,6 +32,11 @@ func (r *Route) When(matcher Matcher) *Route {
 	return r
 }
 
+func (r *Route) OnFileTypes(types ...string) *Route {
+	r.matcher = NewFileTypesMatcher(types)
+	return r
+}
+
 // Call sets a handler for the route
 func (r *Route) Call(handler EventHandler) *Route {
 	r.handler = Handler(handler)

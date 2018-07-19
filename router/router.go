@@ -48,3 +48,8 @@ func (r *Router) On(types ...event.Type) *Route {
 func (r *Router) When(m Matcher) *Route {
 	return r.addRoute().When(m)
 }
+
+// OnFileTypes adds a new route to capture specified file types
+func (r *Router) OnFileTypes(types ...string) *Route {
+	return r.addRoute().OnFileTypes(types...)
+}
