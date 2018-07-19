@@ -86,6 +86,7 @@ func (p *Playground) PlayGoCode(ctx context.Context, fe plugin.Frontend, msg *ev
 	}
 
 	if output != "" {
+		output = strings.TrimSpace(output)
 		m = fmt.Sprintf("运行结果出来了！\n```\n%s\n```", output)
 		fe.SendTextMessage(msg.Channel, m)
 	}
@@ -117,8 +118,8 @@ func (p *Playground) PlayGoFile(ctx context.Context, fe plugin.Frontend, file ev
 		return
 	}
 
-	output = strings.TrimSpace(output)
 	if output != "" {
+		output = strings.TrimSpace(output)
 		m = fmt.Sprintf("运行结果出来了！\n```\n%s\n```", output)
 		fe.SendTextMessage(fileInfo.Channel, m)
 	}
