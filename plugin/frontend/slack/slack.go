@@ -112,21 +112,37 @@ LOOP:
 			case *api.ConnectedEvent:
 				s.me = types.User{ID: ev.Info.User.ID, Name: ev.Info.User.Name}
 				s.Logger.Printf("Connected as %s", s.me)
-			case *api.ConnectionErrorEvent:
-				s.Logger.Printf("Connect error: %s", ev.Error())
-			case *api.MessageEvent:
-				s.eventChan <- s.NewTextMessageEvent(ctx, ev)
-			case *api.FileSharedEvent:
-				s.eventChan <- s.NewFileEvent(ctx, ev)
+
 			case *api.ChannelJoinedEvent:
 				// s.eventChan <- NewJoinChannelEvent(ctx, ev)
 			case *api.GroupJoinedEvent:
 				// s.eventChan <- NewJoinGroupEvent(ctx, ev)
-			case *api.RTMError:
-				s.Logger.Print(ev.Error())
+
+			case *api.MessageEvent:
+				s.eventChan <- s.NewTextMessageEvent(ctx, ev)
+			case *api.FileSharedEvent:
+				s.eventChan <- s.NewFileEvent(ctx, ev)
+
+			case *api.AckMessage:
+				if ev.RTMResponse.Ok {
+					s.Logger.Print("Reply ok: ", ev.Text)
+				} else {
+					s.Logger.Print("Reply error: ", ev.RTMResponse.Error)
+				}
+
+			case *api.ConnectionErrorEvent:
+				s.Logger.Printf("Connect error: %s", ev.Error())
 			case *api.InvalidAuthEvent:
 				s.Logger.Print("Invalid credentials")
 				return
+			case *api.RTMError:
+				s.Logger.Print(ev.Error())
+			case *api.AckErrorEvent:
+				s.Logger.Print("AckError: ", ev.Error())
+
+			case *api.LatencyReport:
+				s.Logger.Print("LatencyReport: ", ev.Value)
+
 			default:
 				s.Debugf("Event(%s): %#v", evt.Type, evt.Data)
 				// s.eventChan <- NewUnhandledEvent(ctx, &evt)
