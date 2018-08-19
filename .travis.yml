@@ -1,32 +1,68 @@
 language: go
-
 go:
-  - "1.10.x"
+  - 1.10.x
 
 stages:
-  - lint
-  - test
-  - build
-  - spelling
-  - markdownlint
+  - style check
+  - lint, build and test
+  - release
+
+branches:
+  except:
+    - latest
 
 jobs:
   include:
-    - stage: lint
-      script:
-        - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s v1.8.1
-        - ./bin/golangci-lint run --enable-all ./...
-    - stage: test
-      script:
-        - go test -v ./...
-    - stage: build
-      script:
-        - go build
-    - stage: spelling
+    - stage: style check
+      name: spelling check
+      install:
+        - true
       script:
         - go get -u github.com/client9/misspell/cmd/misspell
         - misspell -error .
-    - stage: markdownlint
+    - name: markdown lint
+      install:
+        - true
       script:
         - gem install mdl
         - mdl .
+
+    - stage: lint, build and test
+      name: golangci-lint run
+      script:
+        - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh
+          | bash -s v1.8.1
+        - ./bin/golangci-lint run --enable-all ./...
+    - name: go build
+      script:
+        - go build
+    - name: go test
+      script:
+        - go test -v ./...
+
+    - stage: release
+      name: git tag to trigger docker build
+      install:
+        - true
+      script:
+        - git config --global user.email "builds@travis-ci.com"
+        - git config --global user.name "Travis CI"
+        - git tag -f latest -a -m "Generated tag from TravisCI build $TRAVIS_BUILD_NUMBER"
+        - git push -f "https://${GITHUB_TOKEN}@github.com/${TRAVIS_REPO_SLUG}" --tags
+
+notifications:
+  email: false
+  slack:
+    rooms:
+      - "chinaunix:IOENV5lopaoF6VFuLgUlxJFi#slack-bot"
+      - secure: 4FLDmHPYEhCcBrujg6HgoYqq08/+ijt0Ct1PoXmugSBLI2EN56l/kxNwfcEpY9istldgl0sgbsu/ROjluxnrt6MKI5siZYL3brTcen80G3GzlvB2Vm5Q6lJwxLHFFfNj6YfvUppOT6De/Ao/Q8zUn61lmdtQyPLgSwmr5fMy/1LE5xdhg8gDBsprv52reysrHaEzteEJ7kQndIyG4JQ5IrgoKDRwiB6zp3NDgWTpYpGWNatEWziLoMFw0ecryJDp9yI1qWy9ye2IXgvSQr6CH7f3uLRu0Ij/Nx996/dwKJUtfPEokfXNRq7SSrv0xpCnN133Wuebf4sWm3HLxuUnEfSv0ey7sP5LCsDYRVAIkFrBgc1B4k95gnC7PuXKt48o0ViyiCegBgLx1Kf0hrlXcZhPVqBmrH3HsQCbOv546H6Izn7sEVeLyp77vJcaXR9sQzXiw9GJPEjI3RhI1A0DVFvrBCaHJj9mrr4fnHIliIMIBiFivmftRdWYygaOy9ALRn5C6DTaKhpTVVAJAYlEOiIWgnazqLbkHMim6lKpBut1+/8adzHy6X9ADLyQRJKWRe1Hc4RF4BBzaSMwre6ajUx1O0bTrOmPHqSJTsbRf2Jvzod3Qpei3JMFCNfvpsVP83uiG3B8yxrbigZaUcoTYm2WMSllu4A+RSE2tvdpgRY=
+    on_start: always
+    on_success: always
+    on_failure: always
+    on_cancel: always
+    on_error: always
+    on_pull_requests: always
+    template:
+      - "Build <%{build_url}|#%{build_number}> (<%{compare_url}|%{commit}>) of %{repository_slug}@%{branch} by %{author} %{result} in %{duration}"
+      - 'Commit message:'
+      - '%{commit_message}'
