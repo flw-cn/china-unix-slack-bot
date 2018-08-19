@@ -63,7 +63,7 @@ func (s *Slack) Init() error {
 	options.UseRTMStart = s.config.UseRTMStart
 	s.RTM = s.Client.NewRTMWithOptions(&options)
 
-	if s.config.BaseConfig.Debug {
+	if s.GetDebug() {
 		// TODO: api.SetLogger(s.logger)
 		api.SetLogger(log.New(os.Stderr, "SLACK-API ", log.LstdFlags))
 		s.Client.SetDebug(true)
